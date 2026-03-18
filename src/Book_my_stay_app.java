@@ -1,40 +1,46 @@
 import java.util.*;
 
-// --- CUSTOM EXCEPTION ---
-class InvalidBookingException extends Exception {
-    public InvalidBookingException(String message) {
-        super(message);
+// --- DOMAIN CLASSES ---
+class Reservation {
+    private String guestName;
+    private String roomType;
+
+    public Reservation(String guestName, String roomType) {
+        this.guestName = guestName;
+        this.roomType = roomType;
+    }
+
+    @Override
+    public String toString() {
+        return "Guest: " + guestName + ", Room Type: " + roomType;
     }
 }
 
-// --- DOMAIN CLASSES (from previous UC) ---
-class RoomInventory {
-    private Map<String, Integer> inventory = new HashMap<>();
+// --- NEW CLASS FOR UC8: Booking History ---
+class BookingHistory {
+    private List<Reservation> confirmedReservations = new ArrayList<>();
 
-    public void initializeRooms() {
-        inventory.put("Single", 5);
-        inventory.put("Double", 3);
-        inventory.put("Suite", 2);
+    public void addReservation(Reservation reservation) {
+        confirmedReservations.add(reservation);
     }
 
-    public boolean isValidRoomType(String type) {
-        return inventory.containsKey(type);
+    public List<Reservation> getConfirmedReservations() {
+        return confirmedReservations;
     }
 }
 
-// --- NEW CLASS FOR UC9: Reservation Validator ---
-class ReservationValidator {
-    public void validate(String guestName, String roomType, RoomInventory inventory)
-            throws InvalidBookingException {
+// --- NEW CLASS FOR UC8: Booking Report Service ---
+class BookingReportService {
+    public void generateReport(BookingHistory history) {
+        System.out.println("Booking History Report");
+        List<Reservation> historyList = history.getConfirmedReservations();
 
-        // Rule 1: Name cannot be empty
-        if (guestName == null || guestName.trim().isEmpty()) {
-            throw new InvalidBookingException("Guest name cannot be empty.");
-        }
-
-        // Rule 2: Room type must exist in our system (Case Sensitive)
-        if (!inventory.isValidRoomType(roomType)) {
-            throw new InvalidBookingException("Invalid room type selected. Note: It is case sensitive");
+        if (historyList.isEmpty()) {
+            System.out.println("No history available.");
+        } else {
+            for (Reservation res : historyList) {
+                System.out.println(res);
+            }
         }
     }
 }
@@ -42,37 +48,19 @@ class ReservationValidator {
 // --- MAIN APPLICATION ENTRY POINT ---
 public class Book_my_stay_app {
     public static void main(String[] args) {
-        System.out.println("Booking Validation");
-        Scanner scanner = new Scanner(System.in);
+        System.out.println("Booking History and Reporting\n");
 
-        // Initialize components
-        RoomInventory inventory = new RoomInventory();
-        inventory.initializeRooms();
-        ReservationValidator validator = new ReservationValidator();
+        // 1. Setup History and Report Services
+        BookingHistory history = new BookingHistory();
+        BookingReportService reportService = new BookingReportService();
 
-        try {
-            // Accept User Input
-            System.out.print("Enter guest name: ");
-            String name = scanner.nextLine();
+        // 2. Simulate confirming and adding reservations to history
+        // (In a full app, these would come from the Allocation Service)
+        history.addReservation(new Reservation("Abhi", "Single"));
+        history.addReservation(new Reservation("Subha", "Double"));
+        history.addReservation(new Reservation("Vanmathi", "Suite"));
 
-            System.out.print("Enter room type (Single/Double/Suite): ");
-            String type = scanner.nextLine();
-
-            // Validate Input (Fail-Fast)
-            validator.validate(name, type, inventory);
-
-            // If we reach here, validation passed
-            System.out.println("Validation successful for " + name);
-
-        } catch (InvalidBookingException e) {
-            // Handle domain-specific validation errors gracefully
-            System.out.println("Booking failed: " + e.getMessage());
-        } catch (Exception e) {
-            // Catch-all for unexpected errors
-            System.out.println("An unexpected error occurred.");
-        } finally {
-            scanner.close();
-            System.out.println("System remains stable.");
-        }
+        // 3. Generate the report
+        reportService.generateReport(history);
     }
 }
